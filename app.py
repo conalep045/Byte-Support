@@ -1,70 +1,52 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- CONFIGURACIÓN ---
-# Pega aquí tu API Key de Google AI Studio
+# --- 1. CONFIGURACIÓN ---
 API_KEY = "AIzaSyBUTy7W9d8VGfZ7tjI5icVw9pmUqjZa0WI" 
 
-# Estas son las instrucciones extraídas de tu imagen de Byte-SoportePC
-INSTRUCCIONES_DEL_SISTEMA = """
-Eres BYTE AI, el asistente virtual experto en tecnología de 'BYTE COMPUTADORAS'.
-Tu objetivo es brindar soporte técnico inteligente disponible 24/7.
-Debes ayudar a los usuarios con:
-1. Diagnóstico de problemas de hardware y software.
-2. Soluciones para PC lenta o con bajo rendimiento.
-3. Problemas de conexión a Internet y redes.
-4. Consejos de seguridad informática (como el uso de bloqueadores de datos USB).
-
-Tu tono es profesional, tecnológico, eficiente y amable. 
-Si no puedes resolver algo, recomienda al usuario visitar la tienda física de Byte Computadoras.
+# Estas instrucciones las he redactado basándome en tu interfaz de "Byte-SoportePC"
+SYSTEM_PROMPT = """
+Eres BYTE AI, el asistente experto de 'BYTE COMPUTADORAS'. 
+Tu interfaz tiene botones para: Diagnóstico, PC Lenta e Internet.
+Debes responder de forma técnica pero comprensible, ayudando a reparar equipos.
+Siempre prioriza la seguridad del usuario.
 """
 
 genai.configure(api_key=API_KEY)
 
-# Configuración del modelo
+# --- 2. INICIALIZACIÓN DEL MODELO ---
+# Usamos 'gemini-1.5-flash' que es el que usa el Project Preview por defecto
 model = genai.GenerativeModel(
     model_name='gemini-1.5-flash',
-    system_instruction=INSTRUCCIONES_DEL_SISTEMA
+    system_instruction=SYSTEM_PROMPT
 )
 
-# --- INTERFAZ ESTILO BYTE AI ---
-st.set_page_config(page_title="BYTE AI - Soporte Técnico", page_icon="🤖")
+# --- 3. INTERFAZ ---
+st.set_page_config(page_title="Byte-SoportePC", page_icon="💻")
+st.title("🤖 BYTE AI Support")
 
-st.markdown("<h1 style='text-align: center; color: #00ff88;'>BYTE COMPUTADORAS</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>SMART SUPPORT AI</p>", unsafe_allow_html=True)
+if "chat_session" not in st.session_state:
+    # Iniciamos la sesión de chat con historial vacío
+    st.session_state.chat_session = model.start_chat(history=[])
 
-# Botones de acciones rápidas (como en tu imagen)
-st.write("### Acciones Rápidas")
-col1, col2, col3 = st.columns(3)
+# Mostrar mensajes anteriores
+for message in st.session_state.chat_session.history:
+    role = "user" if message.role == "user" else "assistant"
+    with st.chat_message(role):
+        st.markdown(message.parts[0].text)
 
-with col1:
-    if st.button("🔍 Diagnóstico"):
-        st.session_state.messages.append({"role": "user", "content": "Necesito un diagnóstico de mi equipo."})
-with col2:
-    if st.button("⚡ PC Lenta"):
-        st.session_state.messages.append({"role": "user", "content": "Mi computadora está muy lenta, ¿qué puedo hacer?"})
-with col3:
-    if st.button("🌐 Internet"):
-        st.session_state.messages.append({"role": "user", "content": "Tengo problemas con mi conexión a internet."})
-
-# Historial de chat
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# Entrada de usuario
-if prompt := st.chat_input("Describe tu problema aquí..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
+# --- 4. LÓGICA DE RESPUESTA ---
+if prompt := st.chat_input("¿Cuál es el problema de tu PC?"):
+    # Mostrar mensaje del usuario
+    st.chat_message("user").markdown(prompt)
+    
     try:
-        response = model.generate_content(prompt)
+        # Enviar mensaje y obtener respuesta
+        response = st.session_state.chat_session.send_message(prompt)
+        
+        # Mostrar respuesta de la IA
         with st.chat_message("assistant"):
             st.markdown(response.text)
-        st.session_state.messages.append({"role": "assistant", "content": response.text})
+            
     except Exception as e:
-        st.error(f"Error de conexión: {e}")
+        st.error(f"Error: {e}")
