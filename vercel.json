@@ -1,4 +1,5 @@
 {
-  "framework": "vite",
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "buildCommand": "npm install --install-links && npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
 }
