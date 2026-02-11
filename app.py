@@ -1,58 +1,84 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- 1. CONFIGURACIÓN ---
-# Asegúrate de que tu API KEY esté entre las comillas
+# --- CONFIGURACIÓN ---
 API_KEY = "AIzaSyBUTy7W9d8VGfZ7tjI5icVw9pmUqjZa0WI" 
-
 genai.configure(api_key=API_KEY)
+MODEL_ID = 'gemini-1.5-pro'
 
-# Cambiamos al modelo Pro
-MODEL_ID = 'gemini-1.5-pro' 
+# --- DISEÑO ESTILO "BYTE AI" (CSS) ---
+st.markdown("""
+    <style>
+    .main {
+        background-color: #0d1117;
+        color: #ffffff;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 10px;
+        background-color: #161b22;
+        color: #00ff88;
+        border: 1px solid #30363d;
+        height: 3em;
+    }
+    .stButton>button:hover {
+        border-color: #00ff88;
+        color: #ffffff;
+    }
+    h1 {
+        color: #00ff88 !important;
+        text-align: center;
+    }
+    .subtitle {
+        text-align: center;
+        color: #8b949e;
+        margin-bottom: 20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- 2. PERSONALIDAD DE TU APP ---
-INSTRUCCIONES_DE_SISTEMA = """
-Eres BYTE AI, el asistente experto de 'BYTE COMPUTADORAS'. 
-Tu objetivo es dar soporte técnico de alta calidad.
-Eres profesional, eficiente y conoces mucho sobre hardware, software y redes.
-"""
+# --- CEREBRO DE LA APP ---
+SYSTEM_PROMPT = """Eres BYTE AI de 'BYTE COMPUTADORAS'. 
+Eres un experto en soporte técnico. Tu estilo es moderno, rápido y profesional.
+Ayudas con Diagnósticos, PC Lenta e Internet."""
 
-# --- 3. INICIALIZACIÓN ---
-st.set_page_config(page_title="Byte-SoportePC", page_icon="💻")
-st.title("🤖 BYTE AI - Versión Pro")
+model = genai.GenerativeModel(model_name=MODEL_ID, system_instruction=SYSTEM_PROMPT)
 
-# Configurar el modelo con las instrucciones
-model = genai.GenerativeModel(
-    model_name=MODEL_ID,
-    system_instruction=INSTRUCCIONES_DE_SISTEMA
-)
+# --- INTERFAZ VISUAL ---
+st.markdown("<h1>BYTE COMPUTADORAS</h1>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>SMART SUPPORT AI</p>", unsafe_allow_html=True)
 
-# Historial de chat
+# Simulación de los botones de tu foto original
+st.write("### Acciones Rápidas")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if st.button("🔍 Diagnóstico"):
+        st.session_state.messages.append({"role": "user", "content": "Realiza un diagnóstico de mi PC"})
+with col2:
+    if st.button("⚡ PC Lenta"):
+        st.session_state.messages.append({"role": "user", "content": "Mi computadora está muy lenta"})
+with col3:
+    if st.button("🌐 Internet"):
+        st.session_state.messages.append({"role": "user", "content": "Tengo problemas de internet"})
+
+# --- CHAT ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Mostrar mensajes
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- 4. LÓGICA DE RESPUESTA ---
-if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
+if prompt := st.chat_input("Describe tu problema aquí..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     try:
-        # Generar respuesta con el modelo Pro
         response = model.generate_content(prompt)
-        
-        # Extraer el texto de forma segura
-        respuesta_texto = response.text
-        
         with st.chat_message("assistant"):
-            st.markdown(respuesta_texto)
-        st.session_state.messages.append({"role": "assistant", "content": respuesta_texto})
-        
+            st.markdown(response.text)
+        st.session_state.messages.append({"role": "assistant", "content": response.text})
     except Exception as e:
-        st.error(f"Hubo un problema: {e}")
-        st.info("Si el error persiste, verifica que tu API Key tenga permisos para Gemini Pro.")
+        st.error(f"Error: {e}")
