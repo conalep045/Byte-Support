@@ -17,9 +17,9 @@ st.caption("Desarrollado con Gemini API - Acceso Libre")
 
 # --- LÓGICA DE LA API ---
 # Aquí es donde pegas tu API Key de Google AI Studio
-API_KEY = "TU_API_KEY_AQUI" 
+API_KEY = "AIzaSyBUTy7W9d8VGfZ7tjI5icVw9pmUqjZa0WI" 
 
-if API_KEY == "TU_API_KEY_AQUI":
+if API_KEY == "AIzaSyBUTy7W9d8VGfZ7tjI5icVw9pmUqjZa0WI":
     st.error("Por favor, introduce tu API Key en el código.")
 else:
     genai.configure(api_key=API_KEY)
@@ -48,4 +48,5 @@ else:
                 message_placeholder.markdown(full_response)
                 st.session_state.messages.append({"role": "assistant", "content": full_response})
             except Exception as e:
+
                 st.error(f"Error: {e}")
