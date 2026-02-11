@@ -1,52 +1,32 @@
 import streamlit as st
 import google.generativeai as genai
 
-# Configuración de la página
-st.set_page_config(page_title="Mi IA Independiente", page_icon="🤖")
+# CONFIGURACIÓN DIRECTA
+# Asegúrate de que tu llave esté entre las comillas
+LLAVE_REAL = "AIzaSyBUTy7W9d8VGfZ7tjI5icVw9pmUqjZa0WI" 
 
-# --- ESTILOS PERSONALIZADOS ---
-st.markdown("""
-    <style>
-    .main { background-color: #f5f7f9; }
-    .stTextInput { border-radius: 20px; }
-    </style>
-    """, unsafe_allow_html=True)
+genai.configure(api_key=LLAVE_REAL)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-st.title("🤖 Mi Asistente Personal")
-st.caption("Desarrollado con Gemini API - Acceso Libre")
+st.title("Mi App Independiente")
 
-# --- LÓGICA DE LA API ---
-# Aquí es donde pegas tu API Key de Google AI Studio
-API_KEY = "AIzaSyBUTy7W9d8VGfZ7tjI5icVw9pmUqjZa0WI" 
+# Chat
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-if API_KEY == "AIzaSyBUTy7W9d8VGfZ7tjI5icVw9pmUqjZa0WI":
-    st.error("Por favor, introduce tu API Key en el código.")
-else:
-    genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-    # Historial de chat
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+if prompt := st.chat_input("Escribe aquí..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    # Mostrar mensajes previos
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    # Entrada del usuario
-    if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
+    try:
+        response = model.generate_content(prompt)
         with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            try:
-                response = model.generate_content(prompt)
-                full_response = response.text
-                message_placeholder.markdown(full_response)
-                st.session_state.messages.append({"role": "assistant", "content": full_response})
-            except Exception as e:
-
-                st.error(f"Error: {e}")
+            st.markdown(response.text)
+        st.session_state.messages.append({"role": "assistant", "content": response.text})
+    except Exception as e:
+        st.error(f"Hubo un error: {e}")
