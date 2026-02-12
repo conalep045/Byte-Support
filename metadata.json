@@ -1,0 +1,5 @@
+{
+  "name": "Byte-SoportePC",
+  "description": "Asistente técnico inteligente que diagnostica y resuelve fallos de hardware y software mediante un chat interactivo. Utiliza inteligencia artificial para generar guías de reparación.",
+  "requestFramePermissions": []
+}
