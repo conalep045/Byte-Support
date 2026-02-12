@@ -1,5 +1,14 @@
 {
-  "buildCommand": "npm install --install-links && npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite"
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
+  ]
 }
